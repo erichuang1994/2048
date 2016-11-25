@@ -21,9 +21,18 @@ io.on('connection', function(socket){
     delete users[socket.id];
   });
   socket.on('move',function(msg){
-    gameManager.move(msg);
-    socket.emit('actions',JSON.stringify([gameManager.actuate()]));
-  })
+    console.log(msg);
+    if(!gameManager.isGameTerminated()){
+      gameManager.move(msg);
+      socket.emit('actions',JSON.stringify([gameManager.actuate()]));
+    }
+  });
+  socket.on('setup', function(){
+    if(gameManager.isGameTerminated()){
+      gameManager.restart();
+      io.emit('setup', JSON.stringify(gameManager.serialize()));
+    }
+  });
 });
 
 http.listen(3000, function(){
