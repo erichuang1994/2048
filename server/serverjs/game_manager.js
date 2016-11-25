@@ -2,9 +2,22 @@ var Grid = require('./grid');
 var Tile = require('./tile');
 function GameManager(size) {
   this.size           = size; // Size of the grid
-
+  this.timestamp = null;
+  this.oldtimestamp = null;
   this.startTiles     = 2;
   this.setup();
+  console.log(this.oldtimestamp);
+}
+
+// gen timestamp
+GameManager.prototype.genTimestamp = function(){
+  return +new Date();
+}
+
+// gen timestamp
+GameManager.prototype.updateTimestamp = function(){
+  this.oldtimestamp = this.timestamp;
+  this.timestamp = this.genTimestamp();
 }
 
 // Restart the game
@@ -30,7 +43,8 @@ GameManager.prototype.setup = function () {
   this.over        = false;
   this.won         = false;
   this.keepPlaying = false;
-
+  this.timestamp = +new Date();
+  this.oldtimestamp = this.timestamp;
   // Add the initial tiles
   this.addStartTiles();
 
@@ -66,7 +80,9 @@ GameManager.prototype.actuate = function () {
       won:        this.won,
       bestScore:  2048,
       terminated: this.isGameTerminated()
-    }
+    },
+    'timestamp':this.timestamp,
+    'oldtimestamp':this.oldtimestamp
   }
   // this.actuator.actuate(this.grid, {
   //   score:      this.score,
@@ -84,7 +100,9 @@ GameManager.prototype.serialize = function () {
     score:       this.score,
     over:        this.over,
     won:         this.won,
-    keepPlaying: this.keepPlaying
+    keepPlaying: this.keepPlaying,
+    oldtimestamp:this.oldtimestamp,
+    timestamp:   this.timestamp
   };
 };
 
@@ -164,7 +182,7 @@ GameManager.prototype.move = function (direction) {
     if (!this.movesAvailable()) {
       this.over = true; // Game over!
     }
-
+    this.updateTimestamp();
     return this.actuate();
   }
   return null;

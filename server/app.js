@@ -6,8 +6,7 @@ var io = require('socket.io')(http);
 var path = require('path');
 var users = {};
 var gameManager = new GameManager(4);
-// genTimestamp
-// + new Date()
+
 app.use(express.static('public'))
 app.get('/', function(req, res){
   res.sendFile('index.html');
@@ -22,12 +21,18 @@ io.on('connection', function(socket){
   });
   socket.on('move',function(msg){
     console.log(msg);
+    state = JSON.parse(msg);
     if(!gameManager.isGameTerminated()){
-      gameManager.move(msg);
-      socket.emit('actions',JSON.stringify([gameManager.actuate()]));
+      if(state.timestamp === gameManager.timestamp){
+        gameManager.move(state.direction);
+        io.emit('act',JSON.stringify(gameManager.actuate()));
+      }else{
+        // actions lost synchronous
+        console.log("actions lost");
+      }
     }
   });
-  socket.on('setup', function(){
+  socket.on('restart', function(){
     if(gameManager.isGameTerminated()){
       gameManager.restart();
       io.emit('setup', JSON.stringify(gameManager.serialize()));

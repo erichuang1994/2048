@@ -6,30 +6,32 @@ function GameManager(size, InputManager, Actuator, StorageManager, socket) {
   this.socket = socket();
   this.startTiles     = 2;
 
-  this.socket.on('actions', this.actions.bind(this));
+  this.socket.on('act', this.act.bind(this));
   this.socket.on('setup', this.setup.bind(this));
   this.inputManager.on("move", this.mockmove.bind(this));
   // this.inputManager.on("move", this.move.bind(this));
-  // this.inputManager.on("restart", this.restart.bind(this));
+  this.inputManager.on("restart", this.restart.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
-
+  this.timestamp = 0;
   // this.setup();
 }
 
 
-GameManager.prototype.actions = function(actions){
-  console.log(actions);
-  actions = JSON.parse(actions);
-  console.log(actions);
-  actions.forEach(function(action){
+GameManager.prototype.act = function(actionJSON){
+  console.log(actionJSON);
+  action = JSON.parse(actionJSON);
+  console.log(action.oldtimestamp);
+  if(action.oldtimestamp === this.timestamp){
+    this.timestamp = action.timestamp;
     this.actuator.actuate(action.grid, action.state);
-  }.bind(this));
+  }
 };
 // Restart the game
 GameManager.prototype.restart = function () {
-  this.storageManager.clearGameState();
-  this.actuator.continueGame(); // Clear the game won/lost message
-  this.setup();
+  // this.storageManager.clearGameState();
+  // this.actuator.continueGame(); // Clear the game won/lost message
+  // this.setup();
+  this.socket.emit('restart');
 };
 
 // Keep playing after winning (allows going over 2048)
@@ -45,6 +47,8 @@ GameManager.prototype.isGameTerminated = function () {
 
 // Set up the game
 GameManager.prototype.setup = function (stateJSON) {
+  console.log(stateJSON);
+  this.actuator.continueGame();
   var initialState = JSON.parse(stateJSON);
   this.grid        = new Grid(initialState.grid.size,
                               initialState.grid.cells); // Reload grid
@@ -52,6 +56,7 @@ GameManager.prototype.setup = function (stateJSON) {
   this.over        = initialState.over;
   this.won         = initialState.won;
   this.keepPlaying = initialState.keepPlaying;
+  this.timestamp = initialState.timestamp;
   // Update the actuator
   this.actuate();
 };
@@ -92,7 +97,6 @@ GameManager.prototype.actuate = function () {
     bestScore:  this.storageManager.getBestScore(),
     terminated: this.isGameTerminated()
   });
-
 };
 
 // Represent the current game as an object
@@ -124,7 +128,8 @@ GameManager.prototype.moveTile = function (tile, cell) {
 };
 // Test if moveable
 GameManager.prototype.mockmove = function (direction) {
-  this.socket.emit('move', direction);
+  if(!this.isGameTerminated())
+    this.socket.emit('move', JSON.stringify({direction:direction,timestamp:this.timestamp}));
 };
 // Move tiles on the grid in the specified direction
 GameManager.prototype.move = function (direction) {
