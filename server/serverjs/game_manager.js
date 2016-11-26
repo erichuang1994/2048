@@ -1,10 +1,13 @@
 var Grid = require('./grid');
 var Tile = require('./tile');
-function GameManager(size) {
+function GameManager(size, users) {
   this.size           = size; // Size of the grid
   this.timestamp = null;
   this.oldtimestamp = null;
   this.startTiles     = 2;
+  this.actions = [];
+  this.users = users;
+  this.bestScore = 0;
   this.setup();
   console.log(this.oldtimestamp);
 }
@@ -14,10 +17,19 @@ GameManager.prototype.genTimestamp = function(){
   return +new Date();
 }
 
+//
+GameManager.prototype.getUserNum = function(){
+  return Object.keys(this.users).length;
+}
 // gen timestamp
 GameManager.prototype.updateTimestamp = function(){
   this.oldtimestamp = this.timestamp;
   this.timestamp = this.genTimestamp();
+  // update history actions
+  this.actions.push(this.actuate());
+  while(this.actions.length > 10){
+    this.actions.shift();
+  }
 }
 
 // Restart the game
@@ -71,6 +83,9 @@ GameManager.prototype.addRandomTile = function () {
 
 // Sends the updated grid to the actuator
 GameManager.prototype.actuate = function () {
+  if(this.score > this.bestScore){
+    this.bestScore = this.score;
+  }
 
   return {
     grid:this.grid,
@@ -78,8 +93,9 @@ GameManager.prototype.actuate = function () {
     { score:      this.score,
       over:       this.over,
       won:        this.won,
-      bestScore:  2048,
-      terminated: this.isGameTerminated()
+      bestScore:  this.bestScore,
+      terminated: this.isGameTerminated(),
+      userNum: this.getUserNum()
     },
     'timestamp':this.timestamp,
     'oldtimestamp':this.oldtimestamp
@@ -95,6 +111,7 @@ GameManager.prototype.actuate = function () {
 
 // Represent the current game as an object
 GameManager.prototype.serialize = function () {
+  console.log(this.users);
   return {
     grid:        this.grid.serialize(),
     score:       this.score,
@@ -102,7 +119,9 @@ GameManager.prototype.serialize = function () {
     won:         this.won,
     keepPlaying: this.keepPlaying,
     oldtimestamp:this.oldtimestamp,
-    timestamp:   this.timestamp
+    timestamp:   this.timestamp,
+    bestScore: this.bestScore,
+    userNum: this.getUserNum()
   };
 };
 

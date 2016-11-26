@@ -5,6 +5,8 @@ function GameManager(size, InputManager, Actuator, StorageManager, socket) {
   this.actuator       = new Actuator;
   this.socket = socket();
   this.startTiles     = 2;
+  this.timestamp = 0;
+  this.userNum = 0;
 
   this.socket.on('act', this.act.bind(this));
   this.socket.on('setup', this.setup.bind(this));
@@ -12,7 +14,6 @@ function GameManager(size, InputManager, Actuator, StorageManager, socket) {
   // this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
   this.inputManager.on("keepPlaying", this.keepPlaying.bind(this));
-  this.timestamp = 0;
   // this.setup();
 }
 
@@ -50,6 +51,7 @@ GameManager.prototype.setup = function (stateJSON) {
   console.log(stateJSON);
   this.actuator.continueGame();
   var initialState = JSON.parse(stateJSON);
+  console.log(initialState);
   this.grid        = new Grid(initialState.grid.size,
                               initialState.grid.cells); // Reload grid
   this.score       = initialState.score;
@@ -57,6 +59,8 @@ GameManager.prototype.setup = function (stateJSON) {
   this.won         = initialState.won;
   this.keepPlaying = initialState.keepPlaying;
   this.timestamp = initialState.timestamp;
+  this.bestScore = initialState.bestScore;
+  this.userNum = initialState.userNum;
   // Update the actuator
   this.actuate();
 };
@@ -80,22 +84,23 @@ GameManager.prototype.addRandomTile = function () {
 
 // Sends the updated grid to the actuator
 GameManager.prototype.actuate = function () {
-  if (this.storageManager.getBestScore() < this.score) {
-    this.storageManager.setBestScore(this.score);
-  }
-
-  // Clear the state when the game is over (game over only, not win)
-  if (this.over) {
-    this.storageManager.clearGameState();
-  } else {
-    this.storageManager.setGameState(this.serialize());
-  }
+  // if (this.storageManager.getBestScore() < this.score) {
+  //   this.storageManager.setBestScore(this.score);
+  // }
+  //
+  // // Clear the state when the game is over (game over only, not win)
+  // if (this.over) {
+  //   this.storageManager.clearGameState();
+  // } else {
+  //   this.storageManager.setGameState(this.serialize());
+  // }
   this.actuator.actuate(this.grid, {
     score:      this.score,
     over:       this.over,
     won:        this.won,
-    bestScore:  this.storageManager.getBestScore(),
-    terminated: this.isGameTerminated()
+    bestScore:  this.bestScore,
+    terminated: this.isGameTerminated(),
+    userNum:    this.userNum
   });
 };
 

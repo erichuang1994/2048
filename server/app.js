@@ -5,7 +5,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var path = require('path');
 var users = {};
-var gameManager = new GameManager(4);
+var gameManager = new GameManager(4, users);
 
 app.use(express.static('public'))
 app.get('/', function(req, res){
@@ -29,6 +29,7 @@ io.on('connection', function(socket){
       }else{
         // actions lost synchronous
         console.log("actions lost");
+        socket.emit('act', JSON.stringify(gameManager.actuate()));
       }
     }
   });
