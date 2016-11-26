@@ -59,12 +59,12 @@ h1.title {
   }
 }
 
-.scores-container, .infos-container {
+.scores-container {
   float: right;
   text-align: right;
 }
 
-.score-container, .best-container, .userNum-container {
+.score-container, .best-container {
   $height: 25px;
 
   position: relative;
@@ -112,10 +112,6 @@ h1.title {
 
 .best-container:after {
   content: "Best"
-}
-
-.userNum-container:after {
-  content: "Online"
 }
 
 p {
@@ -470,7 +466,6 @@ hr {
   display: block;
   text-align: center;
   float: right;
-  visibility: hidden;
 }
 
 .game-explanation {
@@ -505,7 +500,7 @@ hr {
     margin: 0 auto;
   }
 
-  .score-container, .best-container , .userNum-container{
+  .score-container, .best-container {
     margin-top: 0;
     padding: 15px 10px;
     min-width: 40px;
