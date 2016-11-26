@@ -13,12 +13,19 @@ app.get('/', function(req, res){
 });
 io.on('connection', function(socket){
   console.log('user ' + socket.id + ' connected');
+  // add socket to users
   users[socket.id] = socket;
+
+  // Initial client
   socket.emit('setup', JSON.stringify(gameManager.serialize()));
+
+  // delete socket when disconnect
   socket.on('disconnect', function(){
     console.log('user ' + socket.id + ' disconnected');
     delete users[socket.id];
   });
+
+  // Move event
   socket.on('move',function(msg){
     console.log(msg);
     state = JSON.parse(msg);
@@ -33,6 +40,8 @@ io.on('connection', function(socket){
       }
     }
   });
+
+  // Restart event
   socket.on('restart', function(){
     if(gameManager.isGameTerminated()){
       gameManager.restart();
