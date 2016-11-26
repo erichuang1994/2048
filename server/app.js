@@ -29,7 +29,7 @@ io.on('connection', function(socket){
       }else{
         // actions lost synchronous
         console.log("actions lost");
-        socket.emit('act', JSON.stringify(gameManager.actuate()));
+        socket.emit('actions', JSON.stringify(gameManager.getActions(state.timestamp)));
       }
     }
   });
@@ -37,6 +37,7 @@ io.on('connection', function(socket){
     if(gameManager.isGameTerminated()){
       gameManager.restart();
       io.emit('setup', JSON.stringify(gameManager.serialize()));
+      console.log('[info]:'+'setup');
     }
   });
 });

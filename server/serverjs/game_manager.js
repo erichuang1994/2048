@@ -32,6 +32,16 @@ GameManager.prototype.updateTimestamp = function(){
   }
 }
 
+// get actions
+GameManager.prototype.getActions = function(timestamp){
+  var actions = this.actions;
+  for(var i = 0;i < actions.length;++i){
+    if(actions[i].timestamp > timestamp){
+      return actions.slice(i, actions.length);
+    }
+  }
+}
+
 // Restart the game
 GameManager.prototype.restart = function () {
   this.setup();
@@ -111,7 +121,6 @@ GameManager.prototype.actuate = function () {
 
 // Represent the current game as an object
 GameManager.prototype.serialize = function () {
-  console.log(this.users);
   return {
     grid:        this.grid.serialize(),
     score:       this.score,

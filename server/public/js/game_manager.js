@@ -10,6 +10,7 @@ function GameManager(size, InputManager, Actuator, StorageManager, socket) {
 
   this.socket.on('act', this.act.bind(this));
   this.socket.on('setup', this.setup.bind(this));
+  this.socket.on('actions', this.actions.bind(this));
   this.inputManager.on("move", this.mockmove.bind(this));
   // this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
@@ -17,15 +18,27 @@ function GameManager(size, InputManager, Actuator, StorageManager, socket) {
   // this.setup();
 }
 
-
+// Take one action
 GameManager.prototype.act = function(actionJSON){
-  console.log(actionJSON);
+  console.log('[info]:'+'move');
   action = JSON.parse(actionJSON);
-  console.log(action.oldtimestamp);
-  if(action.oldtimestamp === this.timestamp){
+  // console.log(action.oldtimestamp);
+  if(action.oldtimestamp >= this.timestamp){
     this.timestamp = action.timestamp;
     this.actuator.actuate(action.grid, action.state);
   }
+};
+
+//take some actions
+GameManager.prototype.actions = function(actionsJSON){
+  actions = JSON.parse(actionsJSON);
+  console.log('[info]:'+actions.length+' action lost');
+  actions.forEach(function(action){
+    if(action.oldtimestamp >= this.timestamp){
+      this.timestamp = action.timestamp;
+      this.actuator.actuate(action.grid, action.state);
+    }
+  })
 };
 // Restart the game
 GameManager.prototype.restart = function () {
@@ -48,10 +61,10 @@ GameManager.prototype.isGameTerminated = function () {
 
 // Set up the game
 GameManager.prototype.setup = function (stateJSON) {
-  console.log(stateJSON);
+  console.log('[info]:'+'setup');
   this.actuator.continueGame();
   var initialState = JSON.parse(stateJSON);
-  console.log(initialState);
+  // console.log(initialState);
   this.grid        = new Grid(initialState.grid.size,
                               initialState.grid.cells); // Reload grid
   this.score       = initialState.score;
@@ -84,16 +97,6 @@ GameManager.prototype.addRandomTile = function () {
 
 // Sends the updated grid to the actuator
 GameManager.prototype.actuate = function () {
-  // if (this.storageManager.getBestScore() < this.score) {
-  //   this.storageManager.setBestScore(this.score);
-  // }
-  //
-  // // Clear the state when the game is over (game over only, not win)
-  // if (this.over) {
-  //   this.storageManager.clearGameState();
-  // } else {
-  //   this.storageManager.setGameState(this.serialize());
-  // }
   this.actuator.actuate(this.grid, {
     score:      this.score,
     over:       this.over,
